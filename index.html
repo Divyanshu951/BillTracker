@@ -6,9 +6,11 @@
     <meta name="theme-color" content="#1F1F1F" />
     <title>Bill Tracker</title>
 
+    <!-- Link to the Web App Manifest -->
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icon.png" />
 
+    <!-- Google Fonts and Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -227,39 +229,11 @@
         right: 0;
         background-color: var(--surface-color);
         color: var(--on-surface-color);
-        padding: 0.5rem 1rem;
+        padding: 0.5rem;
         text-align: center;
-        border-top: 1px solid var(--outline-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .footer-total {
         font-size: 1.5rem;
         font-weight: 600;
-      }
-
-      #test-notification-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-        font-weight: 500;
-        background-color: transparent;
-        color: var(--on-surface-variant-color);
-        border: 1px solid var(--outline-color);
-        border-radius: 20px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      #test-notification-btn:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-color: var(--on-surface-variant-color);
-        color: var(--on-surface-color);
-      }
-      #test-notification-btn .material-symbols-outlined {
-        font-size: 16px;
+        border-top: 1px solid var(--outline-color);
       }
 
       /* Modal Styles */
@@ -444,13 +418,10 @@
       <span class="material-symbols-outlined">add</span>
     </button>
     <footer class="footer">
-      <div id="total-amount" class="footer-total">₹0.00</div>
-      <button id="test-notification-btn">
-        <span class="material-symbols-outlined">notifications_active</span>
-        Test Notification
-      </button>
+      <div id="total-amount">₹0.00</div>
     </footer>
 
+    <!-- Add/Edit Bill Modal -->
     <div id="form-modal" class="modal-overlay">
       <div class="modal-content">
         <h2>Add New Bill</h2>
@@ -488,6 +459,7 @@
       </div>
     </div>
 
+    <!-- Bill Details Modal -->
     <div id="details-modal" class="modal-overlay">
       <div class="modal-content">
         <h2 id="details-name"></h2>
@@ -509,6 +481,7 @@
       </div>
     </div>
 
+    <!-- Confirm Delete Modal -->
     <div id="confirm-modal" class="modal-overlay">
       <div class="modal-content">
         <h2>Are you sure?</h2>
@@ -532,9 +505,6 @@
         const billList = document.getElementById("bill-list");
         const addBillMainBtn = document.getElementById("add-bill-btn-main");
         const totalAmountEl = document.getElementById("total-amount");
-        const testNotificationBtn = document.getElementById(
-          "test-notification-btn"
-        );
 
         const formModal = document.getElementById("form-modal");
         const billForm = document.getElementById("bill-form");
@@ -553,66 +523,6 @@
 
         const saveBills = () =>
           localStorage.setItem("bills", JSON.stringify(bills));
-
-        // --- NOTIFICATION LOGIC ---
-        const requestNotificationPermission = () => {
-          if (
-            "Notification" in window &&
-            Notification.permission !== "denied"
-          ) {
-            Notification.requestPermission();
-          }
-        };
-
-        const sendNotification = (bill) => {
-          const daysLeft = calculateDaysLeft(bill.dueDate);
-          const title = `Bill Reminder: ${bill.name}`;
-          const options = {
-            body: `Your bill for ₹${parseFloat(bill.amount).toFixed(
-              2
-            )} is due in ${daysLeft} day(s).`,
-            icon: "icon.png", // Make sure you have an 'icon.png' file
-            tag: `bill-${bill.id}-${daysLeft}`, // Prevents duplicate notifications if the app is opened multiple times
-          };
-          new Notification(title, options);
-        };
-
-        const checkAndSendNotifications = () => {
-          if (Notification.permission !== "granted") {
-            return; // Don't do anything if permission isn't granted
-          }
-
-          const now = new Date();
-          // Only trigger notifications if it's 11 AM or later
-          if (now.getHours() < 11) {
-            return;
-          }
-
-          let billsUpdated = false;
-          bills.forEach((bill) => {
-            if (bill.paid) return;
-
-            // Initialize notifiedDays if it doesn't exist (for backward compatibility)
-            if (!bill.notifiedDays) {
-              bill.notifiedDays = [];
-            }
-
-            const daysLeft = calculateDaysLeft(bill.dueDate);
-
-            // Check for notifications 3, 2, and 1 day before the due date
-            [3, 2, 1].forEach((day) => {
-              if (daysLeft === day && !bill.notifiedDays.includes(day)) {
-                sendNotification(bill);
-                bill.notifiedDays.push(day);
-                billsUpdated = true;
-              }
-            });
-          });
-
-          if (billsUpdated) {
-            saveBills();
-          }
-        };
 
         // --- LOGIC ---
         const calculateDaysLeft = (dueDate) => {
@@ -694,20 +604,20 @@
             });
 
             tile.innerHTML = `
-                                <div class="bill-name">${bill.name}</div>
-                                <div class="bill-due-date">${formattedDate}</div>
-                                <div class="bill-actions">
-                                    <button class="action-button tick-button ${
-                                      bill.paid ? "paid" : ""
-                                    }" title="Mark as Paid"><span class="material-symbols-outlined">done_all</span></button>
-                                    <button class="action-button delete-button" title="Delete Bill"><span class="material-symbols-outlined">delete</span></button>
-                                </div>
-                                <div class="bill-amount">₹${parseFloat(
-                                  bill.amount
-                                ).toFixed(2)}</div>
-                                
-                                <div class="bill-days-left ${daysLeftClass}">${daysLeftText}</div>
-                            `;
+                        <div class="bill-name">${bill.name}</div>
+                        <div class="bill-due-date">${formattedDate}</div>
+                        <div class="bill-actions">
+                            <button class="action-button tick-button ${
+                              bill.paid ? "paid" : ""
+                            }" title="Mark as Paid"><span class="material-symbols-outlined">done_all</span></button>
+                            <button class="action-button delete-button" title="Delete Bill"><span class="material-symbols-outlined">delete</span></button>
+                        </div>
+                        <div class="bill-amount">₹${parseFloat(
+                          bill.amount
+                        ).toFixed(2)}</div>
+                        
+                        <div class="bill-days-left ${daysLeftClass}">${daysLeftText}</div>
+                    `;
 
             // --- TILE EVENT LISTENERS ---
             tile.addEventListener("click", () => showDetailsModal(bill.id));
@@ -787,35 +697,6 @@
         );
         confirmDeleteBtn.addEventListener("click", performDelete);
 
-        testNotificationBtn.addEventListener("click", () => {
-          if (!("Notification" in window)) {
-            alert("This browser does not support desktop notification");
-            return;
-          }
-
-          if (Notification.permission === "granted") {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            });
-            new Notification("✅ Test Notification", {
-              body: `This is a test notification. The time is ${timeString}. If you see this, notifications are working!`,
-              icon: "icon.png",
-            });
-          } else if (Notification.permission === "denied") {
-            alert(
-              "You have blocked notifications. Please enable them in your browser settings to receive reminders."
-            );
-          } else {
-            alert(
-              "Please grant permission for notifications to receive reminders."
-            );
-            requestNotificationPermission();
-          }
-        });
-
         // Close modals on overlay click
         [formModal, detailsModal, confirmModal].forEach((modal) => {
           modal.addEventListener("click", (e) => {
@@ -832,18 +713,14 @@
             dueDate: document.getElementById("bill-date").value,
             notes: document.getElementById("bill-notes").value.trim(),
             paid: false,
-            notifiedDays: [], // NEW: Initialize notification tracking
           });
           saveBills();
           renderBills();
-          checkAndSendNotifications(); // Check if the new bill needs a notification right away
           hideModal(formModal);
         });
 
-        // --- INITIALIZATION ---
-        requestNotificationPermission();
+        // --- INITIAL RENDER ---
         renderBills();
-        checkAndSendNotifications();
       });
     </script>
   </body>
