@@ -1,0 +1,21 @@
+{
+  "name": "Bill Tracker",
+  "short_name": "Bills",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1F1F1F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://i.pinimg.com/564x/13/a3/7c/13a37ccb93adb2a1f304f0a2aade10a5.jpg",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.pinimg.com/564x/13/a3/7c/13a37ccb93adb2a1f304f0a2aade10a5.jpg",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

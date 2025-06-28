@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1F1F1F" />
+    <title>Bill Tracker</title>
+
+    <!-- Link to the Web App Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon.png" />
+
+    <!-- Google Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* CSS (Styling) */
+      :root {
+        --background-color: #121212;
+        --surface-color: #1e1e1e;
+        --primary-accent-color: #aecbfa; /* A soft Material You blue */
+        --on-surface-color: #e6e1e5;
+        --on-surface-variant-color: #cac4d0;
+        --outline-color: #49454f;
+        --danger-color: #f2b8b5;
+        --danger-accent: #cf6679;
+        --success-color: #b7fdbb;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--background-color);
+        color: var(--on-surface-color);
+        margin: 0;
+        padding-bottom: 100px; /* Space for the footer */
+      }
+
+      .header {
+        background-color: var(--surface-color);
+        padding: 10px;
+        font-family: "Bitcount Grid Double", system-ui;
+        font-weight: 300;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--outline-color);
+      }
+
+      .bill-list {
+        padding: 1rem;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .bill-tile {
+        background-color: var(--surface-color);
+        border-radius: 16px;
+        padding: 1rem;
+        display: grid;
+        grid-template-areas:
+          "name name actions"
+          "amount due due"
+          "days days days";
+        grid-template-columns: 1fr 1fr auto;
+        gap: 0 1rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        border: 1px solid var(--outline-color);
+        cursor: pointer;
+      }
+
+      .bill-tile:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-accent-color);
+      }
+
+      .bill-tile.paid {
+        opacity: 0.65;
+        filter: grayscale(80%);
+      }
+
+      .bill-name {
+        grid-area: name;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: text-decoration 0.4s ease;
+      }
+
+      .bill-tile.paid .bill-name {
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+        text-decoration-color: rgba(255, 255, 255, 0.7);
+      }
+
+      .bill-amount {
+        grid-area: amount;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-accent-color);
+        align-self: end;
+      }
+      .bill-due-date {
+        margin-top: 10px;
+        grid-area: due;
+        font-size: 1rem;
+        color: var(--on-surface-variant-color);
+        text-align: right;
+        align-self: end;
+        font-weight: 800;
+      }
+
+      #total-amount {
+        font-family: "Roboto Mono", monospace;
+      }
+
+      .bill-days-left {
+        grid-area: days;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        padding: 0.3rem;
+        border-radius: 8px;
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.2);
+        transition: background-color 0.4s ease, color 0.4s ease;
+      }
+
+      .bill-days-left.due-soon {
+        background-color: rgba(242, 184, 181, 0.2);
+        color: var(--danger-color);
+      }
+      .bill-days-left.safe {
+        background-color: rgba(183, 253, 187, 0.1);
+        color: var(--success-color);
+      }
+
+      .bill-actions {
+        grid-area: actions;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .action-button {
+        width: 30px;
+        height: 30px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--outline-color);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on-surface-variant-color);
+        transition: background-color 0.2s, color 0.2s;
+        z-index: 2; /* Keep buttons above tile click area */
+      }
+
+      .action-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: var(--on-surface-color);
+      }
+      .action-button .material-symbols-outlined {
+        font-size: 20px;
+        transition: font-variation-settings 0.3s ease;
+      }
+      .tick-button.paid .material-symbols-outlined {
+        font-variation-settings: "FILL" 1;
+        color: var(--success-color);
+      }
+
+      .add-bill-button {
+        position: fixed;
+        bottom: calc(60px + 2rem);
+        right: 2rem;
+        width: 45px;
+        height: 45px;
+        background-color: var(--primary-accent-color);
+        color: var(--background-color);
+        border: none;
+        border-radius: 16px;
+        font-size: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .add-bill-button:hover {
+        transform: scale(1.05) rotate(15deg);
+        background-color: #cce0ff;
+      }
+
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--surface-color);
+        color: var(--on-surface-color);
+        padding: 0.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        border-top: 1px solid var(--outline-color);
+      }
+
+      /* Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        background: var(--surface-color);
+        padding: 1rem 2rem;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid var(--outline-color);
+        animation: slideUp 0.4s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+      @keyframes slideDown {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+      }
+
+      .modal-content h2 {
+        margin-top: 0;
+        color: var(--on-surface-color);
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--on-surface-variant-color);
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--outline-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: var(--background-color);
+        color: var(--on-surface-color);
+        font-family: "Inter", sans-serif;
+      }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-accent-color);
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      .modal-actions button {
+        padding: 0.8rem 1.5rem;
+        border-radius: 20px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      #save-bill-btn {
+        background-color: var(--primary-accent-color);
+        color: var(--background-color);
+      }
+      .modal-button-cancel {
+        background-color: transparent;
+        color: var(--primary-accent-color);
+        border: 1px solid var(--outline-color);
+      }
+      .modal-button-cancel:hover {
+        background-color: rgba(174, 203, 250, 0.1);
+      }
+
+      /* Details Modal Specifics */
+      #details-modal .modal-content {
+        text-align: left;
+      }
+      #details-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-accent-color);
+        margin: 0.5rem 0;
+      }
+      #details-due {
+        color: var(--on-surface-variant-color);
+        margin-bottom: 1.5rem;
+      }
+      #details-notes-container {
+        background-color: var(--background-color);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      #details-notes-container h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+      }
+      #details-notes {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: var(--on-surface-variant-color);
+      }
+      #details-notes:empty::before {
+        content: "No notes for this bill.";
+        font-style: italic;
+        opacity: 0.7;
+      }
+
+      /* Confirm Modal Specifics */
+      #confirm-modal .modal-content {
+        text-align: center;
+      }
+      #confirm-message {
+        margin-bottom: 2rem;
+      }
+      #confirm-delete-btn {
+        background-color: var(--danger-accent);
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">Monthly Bills</header>
+    <main id="bill-list" class="bill-list"></main>
+    <button id="add-bill-btn-main" class="add-bill-button">
+      <span class="material-symbols-outlined">add</span>
+    </button>
+    <footer class="footer">
+      <div id="total-amount">₹0.00</div>
+    </footer>
+
+    <!-- Add/Edit Bill Modal -->
+    <div id="form-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Add New Bill</h2>
+        <form id="bill-form">
+          <div class="form-group">
+            <label for="bill-name">Bill Name</label
+            ><input type="text" id="bill-name" required />
+          </div>
+          <div class="form-group">
+            <label for="bill-amount">Amount (₹)</label
+            ><input type="number" id="bill-amount" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="bill-date">Due Date</label
+            ><input type="date" id="bill-date" required />
+          </div>
+          <div class="form-group">
+            <label for="bill-notes">Notes</label
+            ><textarea
+              id="bill-notes"
+              placeholder="e.g., confirmation number, account details..."
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="modal-button-cancel"
+              id="form-cancel-btn"
+            >
+              Cancel
+            </button>
+            <button type="submit" id="save-bill-btn">Save Bill</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bill Details Modal -->
+    <div id="details-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 id="details-name"></h2>
+        <p id="details-amount"></p>
+        <p id="details-due"></p>
+        <div id="details-notes-container">
+          <h3>Notes</h3>
+          <p id="details-notes"></p>
+        </div>
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="modal-button-cancel"
+            id="details-close-btn"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Are you sure?</h2>
+        <p id="confirm-message">This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="modal-button-cancel"
+            id="confirm-cancel-btn"
+          >
+            Cancel
+          </button>
+          <button type="button" id="confirm-delete-btn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- ELEMENTS ---
+        const billList = document.getElementById("bill-list");
+        const addBillMainBtn = document.getElementById("add-bill-btn-main");
+        const totalAmountEl = document.getElementById("total-amount");
+
+        const formModal = document.getElementById("form-modal");
+        const billForm = document.getElementById("bill-form");
+        const formCancelBtn = document.getElementById("form-cancel-btn");
+
+        const detailsModal = document.getElementById("details-modal");
+        const detailsCloseBtn = document.getElementById("details-close-btn");
+
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
+        const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
+        // --- DATA ---
+        let bills = JSON.parse(localStorage.getItem("bills")) || [];
+        let billToDeleteId = null;
+
+        const saveBills = () =>
+          localStorage.setItem("bills", JSON.stringify(bills));
+
+        // --- LOGIC ---
+        const calculateDaysLeft = (dueDate) => {
+          const now = new Date();
+          const due = new Date(dueDate + "T00:00:00");
+          now.setHours(0, 0, 0, 0);
+          return Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+        };
+
+        const togglePaidStatus = (id) => {
+          const bill = bills.find((b) => b.id === id);
+          if (bill) {
+            bill.paid = !bill.paid;
+            saveBills();
+            renderBills();
+          }
+        };
+
+        const performDelete = () => {
+          if (billToDeleteId) {
+            bills = bills.filter((b) => b.id !== billToDeleteId);
+            saveBills();
+            renderBills();
+            hideModal(confirmModal);
+            billToDeleteId = null;
+          }
+        };
+
+        // --- RENDERING ---
+        const renderBills = () => {
+          billList.innerHTML = "";
+          let totalDue = 0;
+
+          const sortedBills = [...bills].sort(
+            (a, b) =>
+              a.paid - b.paid || new Date(a.dueDate) - new Date(b.dueDate)
+          );
+
+          if (sortedBills.length === 0) {
+            billList.innerHTML =
+              '<p style="text-align:center; color: var(--on-surface-variant-color); padding: 2rem;">No bills here. Tap the + button to add one!</p>';
+          }
+
+          sortedBills.forEach((bill) => {
+            if (!bill.paid) {
+              totalDue += parseFloat(bill.amount);
+            }
+
+            const tile = document.createElement("div");
+            tile.className = `bill-tile ${bill.paid ? "paid" : ""}`;
+            tile.dataset.id = bill.id;
+
+            const daysLeft = calculateDaysLeft(bill.dueDate);
+            let daysLeftText = "";
+            let daysLeftClass = "safe";
+
+            if (bill.paid) {
+              daysLeftText = "PAID ";
+              daysLeftClass = "";
+            } else if (daysLeft < 0) {
+              daysLeftText = `OVERDUE BY ${Math.abs(daysLeft)} DAYS`;
+              daysLeftClass = "due-soon";
+            } else if (daysLeft === 0) {
+              daysLeftText = "DUE TODAY";
+              daysLeftClass = "due-soon";
+            } else if (daysLeft <= 7) {
+              daysLeftText = `DUE IN ${daysLeft} DAYS`;
+              daysLeftClass = "due-soon";
+            } else {
+              daysLeftText = `Due in ${daysLeft} days`;
+            }
+
+            const formattedDate = new Date(
+              bill.dueDate + "T00:00:00"
+            ).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+
+            tile.innerHTML = `
+                        <div class="bill-name">${bill.name}</div>
+                        <div class="bill-due-date">${formattedDate}</div>
+                        <div class="bill-actions">
+                            <button class="action-button tick-button ${
+                              bill.paid ? "paid" : ""
+                            }" title="Mark as Paid"><span class="material-symbols-outlined">done_all</span></button>
+                            <button class="action-button delete-button" title="Delete Bill"><span class="material-symbols-outlined">delete</span></button>
+                        </div>
+                        <div class="bill-amount">₹${parseFloat(
+                          bill.amount
+                        ).toFixed(2)}</div>
+                        
+                        <div class="bill-days-left ${daysLeftClass}">${daysLeftText}</div>
+                    `;
+
+            // --- TILE EVENT LISTENERS ---
+            tile.addEventListener("click", () => showDetailsModal(bill.id));
+            tile
+              .querySelector(".tick-button")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                togglePaidStatus(bill.id);
+              });
+            tile
+              .querySelector(".delete-button")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+                billToDeleteId = bill.id;
+                showModal(confirmModal);
+              });
+
+            billList.appendChild(tile);
+          });
+          totalAmountEl.textContent = `₹${totalDue.toFixed(2)}`;
+        };
+
+        // --- MODAL MANAGEMENT ---
+        const showModal = (modal) => {
+          modal.style.display = "flex";
+          if (modal === formModal) {
+            document.getElementById("bill-date").valueAsDate = new Date();
+            document.getElementById("bill-name").focus();
+          }
+        };
+        const hideModal = (modal) => {
+          modal.style.animation = "fadeOut 0.3s ease forwards";
+          modal.querySelector(".modal-content").style.animation =
+            "slideDown 0.4s ease forwards";
+          setTimeout(() => {
+            modal.style.display = "none";
+            modal.style.animation = "fadeIn 0.3s ease";
+            modal.querySelector(".modal-content").style.animation =
+              "slideUp 0.4s ease";
+            if (modal === formModal) billForm.reset();
+          }, 400);
+        };
+
+        const showDetailsModal = (id) => {
+          const bill = bills.find((b) => b.id === id);
+          if (!bill) return;
+
+          document.getElementById("details-name").textContent = bill.name;
+          document.getElementById(
+            "details-amount"
+          ).textContent = `₹${parseFloat(bill.amount).toFixed(2)}`;
+          const formattedDate = new Date(
+            bill.dueDate + "T00:00:00"
+          ).toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+          document.getElementById(
+            "details-due"
+          ).textContent = `Due on ${formattedDate}`;
+          document.getElementById("details-notes").textContent =
+            bill.notes || "";
+
+          showModal(detailsModal);
+        };
+
+        // --- GENERAL EVENT LISTENERS ---
+        addBillMainBtn.addEventListener("click", () => showModal(formModal));
+        formCancelBtn.addEventListener("click", () => hideModal(formModal));
+        detailsCloseBtn.addEventListener("click", () =>
+          hideModal(detailsModal)
+        );
+        confirmCancelBtn.addEventListener("click", () =>
+          hideModal(confirmModal)
+        );
+        confirmDeleteBtn.addEventListener("click", performDelete);
+
+        // Close modals on overlay click
+        [formModal, detailsModal, confirmModal].forEach((modal) => {
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) hideModal(modal);
+          });
+        });
+
+        billForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          bills.push({
+            id: Date.now(),
+            name: document.getElementById("bill-name").value.trim(),
+            amount: parseFloat(document.getElementById("bill-amount").value),
+            dueDate: document.getElementById("bill-date").value,
+            notes: document.getElementById("bill-notes").value.trim(),
+            paid: false,
+          });
+          saveBills();
+          renderBills();
+          hideModal(formModal);
+        });
+
+        // --- INITIAL RENDER ---
+        renderBills();
+      });
+    </script>
+  </body>
+</html>
